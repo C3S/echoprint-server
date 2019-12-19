@@ -24,6 +24,7 @@ urls = (
     '/query', 'query',
     '/query?(.*)', 'query',
     '/ingest', 'ingest',
+    '/delete', 'delete',
 )
 
 
@@ -66,6 +67,21 @@ class query:
         response = fp.best_match_for_query(stuff.fp_code)
         return json.dumps({"ok":True, "query":stuff.fp_code, "message":response.message(), "match":response.match(), "score":response.score, \
                         "qtime":response.qtime, "track_id":response.TRID, "total_time":response.total_time})
+
+
+class delete:
+    def POST(self):
+        import ptvsd  # unconditional import breaks test coverage
+        ptvsd.enable_attach(address=("0.0.0.0", 51004),
+                            redirect_output=True)
+        ptvsd.wait_for_attach()
+        ptvsd.break_into_debugger()        
+        return self.GET()
+
+    def GET(self):
+        stuff = web.input(track_id="")
+        response = fp.delete(stuff.track_id)
+        return json.dumps({"ok":True})
 
 
 application = web.application(urls, globals())#.wsgifunc()
