@@ -153,6 +153,13 @@ def _tDouble(code, key, integ, fract):
 
 
 def socksend(sock, lst):
+    # lst_new = ''
+    # for bla in lst:
+    #     try:
+    #         lst_new += bla
+    #     except:
+    #         pass
+    # sock.sendall(lst_new)
     sock.sendall(''.join(lst))
 
 
