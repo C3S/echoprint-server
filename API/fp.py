@@ -85,6 +85,9 @@ def inflate_code_string(s):
     assert(len(times) == len(codes)) # these should match up!
     return ' '.join('%d %d' % (c, t) for c,t in zip(codes, times))
 
+def key(k, v):
+    return (v, k)
+
 def decode_code_string(compressed_code_string):
     compressed_code_string = compressed_code_string.encode('utf8')
     if compressed_code_string == "":
@@ -206,7 +209,7 @@ def best_match_for_query(code_string, elbow=10, local=False):
     
     #logger.debug("Actual score for %s is %d (code_len %d), original was %d" % (r["track_id"], actual_scores[r["track_id"]], code_len, top_match_score))
     # Sort the actual scores
-    sorted_actual_scores = sorted(actual_scores.iteritems(), key=lambda (k,v): (v,k), reverse=True)
+    sorted_actual_scores = sorted(actual_scores.iteritems(), key=key, reverse=True)
     
     # Because we split songs up into multiple parts, sometimes the results will have the same track in the
     # first few results. Remove these duplicates so that the falloff is (potentially) higher.
@@ -304,7 +307,7 @@ def actual_matches(code_string_query, code_string_match, slop = 2, elbow = 10):
         match_counter += 2
 
     # sort the histogram, pick the top 2 and return that as your actual score
-    actual_match_list = sorted(time_diffs.iteritems(), key=lambda (k,v): (v,k), reverse=True)
+    actual_match_list = sorted(time_diffs.iteritems(), key=key, reverse=True)
 
     if(len(actual_match_list)>1):
         return actual_match_list[0][1] + actual_match_list[1][1]
@@ -348,18 +351,18 @@ class FakeSolrResponse(object):
     
 def local_load(filename):
     global _fake_solr
-    print "Loading from " + filename
+    print("Loading from " + filename)
     disk = open(filename,"rb")
     _fake_solr = pickle.load(disk)
     disk.close()
-    print "Done"
+    print("Done")
     
 def local_save(filename):
-    print "Saving to " + filename
+    print("Saving to " + filename)
     disk = open(filename,"wb")
     pickle.dump(_fake_solr,disk)
     disk.close()
-    print "Done"
+    print("Done")
     
 def local_ingest(docs, codes):
     store = dict(codes)
@@ -398,14 +401,14 @@ def local_delete(tracks):
         
 
 def local_dump():
-    print "Stored tracks:"
-    print _fake_solr["store"].keys()
-    print "Metadata:"
+    print("Stored tracks:")
+    print(_fake_solr["store"].keys())
+    print("Metadata:")
     for t in _fake_solr["metadata"].keys():
-        print t, _fake_solr["metadata"][t]
-    print "Keys:"
+        print(t, _fake_solr["metadata"][t])
+    print("Keys:")
     for k in _fake_solr["index"].keys():
-        print "%s -> %s" % (k, ", ".join(_fake_solr["index"][k]))
+        print("%s -> %s" % (k, ", ".join(_fake_solr["index"][k])))
 
 def local_query_fp(code_string,rows=10,get_data=False):
     keys = code_string.split(" ")[0::2]
@@ -420,10 +423,10 @@ def local_query_fp(code_string,rows=10,get_data=False):
         top_matches[track] += 1
     if not get_data:
         # Make a list of lists that have track_id, score
-        return FakeSolrResponse(sorted(top_matches.iteritems(), key=lambda (k,v): (v,k), reverse=True)[0:rows])
+        return FakeSolrResponse(sorted(top_matches.iteritems(), key=key, reverse=True)[0:rows])
     else:
         # Make a list of lists that have track_id, score, then fp
-        lol = sorted(top_matches.iteritems(), key=lambda (k,v): (v,k), reverse=True)[0:rows]
+        lol = sorted(top_matches.iteritems(), key=key, reverse=True)[0:rows]
         lol = map(list, lol)
         
         for x in lol:
@@ -514,14 +517,14 @@ def split_codes(fp):
     for i in range(numsegs):
         s = i * halfsegment
         e = i * halfsegment + segmentlength
-        #print i, s, e
+        #print(i, s, e)
         
         while sindex < size and pairs[sindex][0] < s:
-            #print "s", sindex, l[sindex]
+            #print("s", sindex, l[sindex])
             sindex+=1
         eindex = sindex
         while eindex < size and pairs[eindex][0] < e:
-            #print "e",eindex,l[eindex]
+            #print("e",eindex,l[eindex])
             eindex+=1
         key = "%s-%d" % (trid, i)
         

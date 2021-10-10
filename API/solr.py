@@ -231,9 +231,9 @@ Query Responses
     shortcuts work: 
     
         responses = connection.query('q=foo')
-        print len(responses)
+        print(len(responses))
         for document in responses: 
-            print document['id'], document['score']
+            print(document['id'], document['score'])
 
 
     If you pass in `highlight` to the SolrConnection.query call, 
@@ -258,13 +258,13 @@ Example showing basic connection/transactions
 Examples showing the search wrapper
 
     >>> response = c.query('test', rows=20)
-    >>> print response.results.start
+    >>> print(response.results.start)
      0
-    >>> for match in response: 
-    ...     print match['id'], 
+    >>> for match in response:
+    ...     print(match['id'])
       0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19
     >>> response = response.next_batch()
-    >>> print response.results.start
+    >>> print(response.results.start)
      20
  
 
@@ -280,26 +280,24 @@ Add 3 documents and delete 1, but send all of them as a single transaction.
 
 Enter a raw query, without processing the returned HTML contents.
     
-    >>> print c.query_raw(q='id:[* TO *]', wt='python', rows='10')
+    >>> print(c.query_raw(q='id:[* TO *]', wt='python', rows='10'))
 
 """
 import sys
 import socket
-import httplib
-import urlparse
+import http
 import codecs
 import urllib
 import datetime
 import time
-from StringIO import StringIO
+from io import StringIO
 from xml.sax import make_parser
 from xml.sax import _exceptions
 from xml.sax.handler import ContentHandler
 from xml.sax.saxutils import escape, quoteattr
 from xml.dom.minidom import parseString
-from types import BooleanType, FloatType, IntType, ListType, LongType, StringType, UnicodeType
 from contextlib import contextmanager
-import Queue
+import queue
 
 
 __version__ = "1.3.0"
@@ -343,21 +341,21 @@ class ConnectionPool(object):
         """
         self._args = args
         self._kwargs = kwargs
-        self._queue = Queue.Queue(self._kwargs.pop('pool_size', 20))
+        self._queue = queue.Queue(self._kwargs.pop('pool_size', 20))
         self._klass = klass
     
     def get(self):
         "Get an available connection, creating a new one if needed."
         try:
             return self._queue.get_nowait()
-        except Queue.Empty:
+        except queue.Empty:
             return self._klass(*self._args, **self._kwargs)
     
     def put(self, conn):
         "Return a connection to the pool."
         try:
             self._queue.put_nowait(conn)
-        except Queue.Full:
+        except queue.Full:
             pass
 
 class SolrConnectionPool(ConnectionPool):
@@ -377,7 +375,7 @@ def str2bool(s):
     elif s in ['False', 'false']:
         return False
     else:
-        raise ValueError, "Bool-looking string required."
+        raise ValueError("Bool-looking string required.")
 
 def reallyunicode(s, encoding="utf-8"):
     """
@@ -389,15 +387,15 @@ def reallyunicode(s, encoding="utf-8"):
     Usually this will just try utf-8 twice, because we will rarely if ever
     specify an encoding. But we could!
     """
-    if type(s) is StringType:
+    if type(s) is str:
         for args in ((encoding,), ('utf-8',), ('latin-1',), ('ascii', 'replace')):
             try:
                 s = s.decode(*args)
                 break
             except UnicodeDecodeError:
                 continue
-    if type(s) is not UnicodeType:
-        raise ValueError, "%s is not a string at all." % s
+    else:
+        raise ValueError("%s is not a string at all." % s)
     return s
 
 def reallyUTF8(s):
@@ -405,10 +403,10 @@ def reallyUTF8(s):
 
 def makeNiceLucene(text):
     #http://lucene.apache.org/java/docs/queryparsersyntax.html#Escaping%20Special%20Characters
-    text = re.sub(r'\bAND\b', '\AND', text)
-    text = re.sub(r'\bOR\b', '\OR', text)
-    text = re.sub(r'\bNOT\b', '\NOT', text)
-    return re.sub(r"([\+\-\&\|\!\(\)\{\}\[\]\;\^\"\~\*\?\:\\])",r"\\\1", text)
+    text = re.sub(r'\bAND\b', '\\AND', text)
+    text = re.sub(r'\bOR\b', '\\OR', text)
+    text = re.sub(r'\bNOT\b', '\\NOT', text)
+    return re.sub(r"([\+\-\&\|\!\(\)\{\}\[\]\;\^\"\~\*\?\:\\])", r"\\\1", text)
     
 
 
@@ -478,7 +476,7 @@ class SolrConnection:
         """
 
                 
-        self.scheme, self.host, self.path = urlparse.urlparse(url, 'http')[:3]
+        self.scheme, self.host, self.path = urllib.parse(url, 'http')[:3]
         self.url = url
 
         assert self.scheme in ('http','https')
@@ -491,10 +489,10 @@ class SolrConnection:
         self.invariant = invariant
         
         if self.scheme == 'https': 
-            self.conn = httplib.HTTPSConnection(self.host, 
+            self.conn = http.client.HTTPSConnection(self.host, 
                    key_file=ssl_key, cert_file=ssl_cert)
         else:
-            self.conn = httplib.HTTPConnection(self.host)
+            self.conn = http.client.HTTPConnection(self.host)
 
         self.batch_cnt = 0  #  this is int, not bool!
         self.response_version = 2.2 
@@ -977,10 +975,10 @@ class SolrConnection:
         try:
             self.conn.connect()
         except socket.error:
-            print "Error re-connecting. I'm going to wait one minute for solr to restart. If it doesn't come back there's a problem."
+            print("Error re-connecting. I'm going to wait one minute for solr to restart. If it doesn't come back there's a problem.")
             time.sleep(60)
             self.conn.connect()
-            print "It re-connected ok."
+            print("It re-connected ok.")
 
 
     def _cleanup(self, body):
@@ -1027,8 +1025,8 @@ class SolrConnection:
                 self.conn.request('POST', url, body.encode('utf-8'), headers)
                 return check_response_status(self.conn.getresponse())
             except (SolrHTTPException,
-                    httplib.ImproperConnectionState,
-                    httplib.BadStatusLine):
+                    http.client.ImproperConnectionState,
+                    http.client.BadStatusLine):
                     # We include BadStatusLine as they are spurious
                     # and may randomly happen on an otherwise fine 
                     # SOLR connection (though not often)
@@ -1363,8 +1361,8 @@ if sys.version < '2.5.':
             second, microsecond = divmod(microseconds, 1000000)
             return datetime.datetime(year, month, day, hour, 
                 minute, second, microsecond, utc)
-        except ValueError: 
-            raise ValueError ("'%s' is not a valid ISO 8601 SOLR date" % value)
+        except ValueError:
+            raise ValueError("'%s' is not a valid ISO 8601 SOLR date" % value)
 else: 
     def utc_from_string(value): 
         """
