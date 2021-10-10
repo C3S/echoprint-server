@@ -26,7 +26,7 @@ for the raw Tyrant protocol::
 import math
 import socket
 import struct
-import UserDict
+from collections import MutableMapping as DictMixin
 
 __version__ = '1.1.17'
 
@@ -204,7 +204,7 @@ def sockstrpair(sock):
     return k, v
 
 
-class PyTyrant(object, UserDict.DictMixin):
+class PyTyrant(DictMixin):
     """
     Dict-like proxy for a Tyrant instance
     """
@@ -216,7 +216,7 @@ class PyTyrant(object, UserDict.DictMixin):
         self.t = t
 
     def __repr__(self):
-        # The __repr__ for UserDict.DictMixin isn't desirable
+        # The __repr__ for DictMixin isn't desirable
         # for a large KV store :)
         return object.__repr__(self)
 
