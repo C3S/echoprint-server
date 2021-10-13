@@ -120,12 +120,12 @@ def munge(file, start=-1, duration=-1, bitrate=128, volume=-1, downsample_to_22 
     (what, me) = decode_to_wav(decoder, file, me, what, start, duration, volume, downsample_to_22, channels, speed_up, slow_down)
 
     if not os.path.exists(me):
-        print >> sys.stderr, "munge result not there"
+        print("munge result not there", file=sys.stderr)
         return (None, what)
         
     file_size = os.path.getsize(me)
     if(file_size<100000):
-        print >> sys.stderr, "munge too small"
+        print("munge too small", file=sys.stderr)
         os.remove(me)
         return (None, what)
 
@@ -178,7 +178,7 @@ def prf(numbers_dict):
         true_negative_rate = tn / (tn + fp)
     if tp or tn or fp or fn:
         accuracy = (tp+tn) / (tp + tn + fp + fn)
-    print "P %2.4f R %2.4f F %2.4f TNR %2.4f Acc %2.4f %s" % (precision, recall, f, true_negative_rate, accuracy, str(numbers_dict))
+    print("P %2.4f R %2.4f F %2.4f TNR %2.4f Acc %2.4f %s" % (precision, recall, f, true_negative_rate, accuracy, str(numbers_dict)))
     return {"precision":precision, "recall":recall, "f":f, "true_negative_rate":true_negative_rate, "accuracy":accuracy}
 
 def dpwe(numbers_dict):
@@ -197,7 +197,7 @@ def dpwe(numbers_dict):
         frr = (r2 + r3) / (r1 + r2 + r3)
     # probability of error
     pr = ((_old_queries / _total_queries) * frr) + ((_new_queries / _total_queries) * far)    
-    print "PR %2.4f CAR %2.4f FAR %2.4f FRR %2.4f %s" % (pr, car, far, frr, str(numbers_dict))
+    print("PR %2.4f CAR %2.4f FAR %2.4f FRR %2.4f %s" % (pr, car, far, frr, str(numbers_dict)))
     stats = {}
     stats.update(numbers_dict)    
     dpwe_nums = {"pr":pr, "car": car, "far":far, "frr":frr}
@@ -225,7 +225,7 @@ def test_file(filename, local = False, expect_match=True, original_TRID=None, re
                 matching_TRID = s.TRID
 
     except IOError:
-        print "TIMEOUT from API server"
+        print("TIMEOUT from API server")
         return "err-api"
     except TypeError: # codegen returned none
         return "err-codegen"
@@ -276,15 +276,15 @@ def test_single(filename, local=False, **munge_kwargs):
             metad = fp.metadata_for_track_id(s.TRID)
             metad["title"] = metad["track"]
         song_metadata = {"artist": metad.get("artist", ""), "release": metad.get("release", ""), "title": metad.get("title", "")}
-        print str(song_metadata)
+        print(str(song_metadata))
     else:
-        print "No match"
+        print("No match")
     
     decoded = fp.decode_code_string(query_obj[0]["code"])
-    print str(len(decoded.split(" "))/2) + " codes in original"
+    print(str(len(decoded.split(" "))/2) + " codes in original")
     response = fp.query_fp(decoded, local=local, rows=15)
     if response is not None:
-        print "From FP flat:"
+        print("From FP flat:")
         tracks = {}
         scores = {}
         for r in response.results:
@@ -300,13 +300,13 @@ def test_single(filename, local=False, **munge_kwargs):
                 tracks[r["track_id"]] = (m, r["score"], actual_match)
                 scores[r["track_id"]] = actual_match
             else:
-                print "problem getting metadata for " + r["track_id"]
-        sorted_scores = sorted(scores.iteritems(), key=lambda (k,v): (v,k), reverse=True)
+                print("problem getting metadata for " + r["track_id"])
+        sorted_scores = sorted(iter(scores.items()), key=lambda k_v: (k_v[1],k_v[0]), reverse=True)
         for (trackid, score) in sorted_scores:
             (m, score, actual_match) = tracks[trackid]
-            print trackid + " (" + str(int(score)) + ", " + str(actual_match) +") - " + m["artist"] + " - " + m["title"]
+            print(trackid + " (" + str(int(score)) + ", " + str(actual_match) +") - " + m["artist"] + " - " + m["title"])
     else:
-        print "response from fp flat was None -- decoded code was " + str(decoded)
+        print("response from fp flat was None -- decoded code was " + str(decoded))
     os.remove(new_file)
 
 def test(how_many, diag=False, local=False, no_shuffle=False, **munge_kwargs):
@@ -317,7 +317,7 @@ def test(how_many, diag=False, local=False, no_shuffle=False, **munge_kwargs):
     """
     results = {"fp-a":0, "fp-b":0, "fn":0, "tp":0, "tn":0, "err-codegen":0, "err-munge":0, "err-api":0, "err-data":0, "total":0}
     
-    docs_to_test = _local_bigeval.keys() + _new_music_files
+    docs_to_test = list(_local_bigeval.keys()) + _new_music_files
     if not no_shuffle:
         random.shuffle(docs_to_test)
 
@@ -338,7 +338,7 @@ def test(how_many, diag=False, local=False, no_shuffle=False, **munge_kwargs):
             result = test_file(new_file, expect_match = False, local=local)
         
         if result is not "tp" and result is not "tn":
-            print "BAD ### " + filename + " ### " + result + " ### " + str(original_TRID) + " ### " + str(what)
+            print("BAD ### " + filename + " ### " + result + " ### " + str(original_TRID) + " ### " + str(what))
             if diag and not result.startswith("err"):
                 test_single(filename, local=local, **munge_kwargs)
             
@@ -351,25 +351,25 @@ def test(how_many, diag=False, local=False, no_shuffle=False, **munge_kwargs):
     return results
     
 def usage():
-    print "FP bigeval"
-    print "\t-1\t--single  \tSingle mode, given a filename show an answer"
-    print "\t-c\t--count   \tHow many files to process (required if not --single)"
-    print "\t-s\t--start   \tIn seconds, when to start decoding (0)"
-    print "\t-d\t--duration\tIn seconds, how long to decode, -1 is unchanged (30)"
-    print "\t-D\t--decoder \tWhat decoder to use to make pcm ([mpg123|ffmpeg|sox|mad])"
-    print "\t-b\t--bitrate \tIn kbps, encoded bitrate. only for mp3, m4a, ogg. (128)"
-    print "\t-v\t--volume  \tIn %, volume of original. -1 for no adjustment. (-1)"
-    print "\t-l\t--lowpass \tIn Hz, lowpass filter. -1 for no adjustment. (-1)"
-    print "\t-e\t--encoder \tEncoder to use. wav, m4a, ogg, mp3. (wav)"
-    print "\t-L\t--local   \tUse local data, not solr, with given JSON block (None)"
-    print "\t-p\t--print   \tDuring bulk mode, show diagnostic on matches for types fp, fn, fp-a, fp-b (off)"
-    print "\t\t--no-shuffle\tdon't randomise the list of input files before running (for testing the exact same files each run) (off)"
-    print "\t-m\t--mono    \tMono decoder. (off)"
-    print "\t-2\t--22kHz   \tDownsample to 22kHz (off)"
-    print "\t-B\t--binary  \tPath to the binary to use for this test (codegen on path)"
-    print "\t-t\t--test    \tlist of files to check. pickle of {trid:path, trid2:path2}, or 'none'"
-    print "\t-n\t--new     \tnewline separated file of files not in the database, or 'none'"
-    print "\t-h\t--help    \tThis help message."
+    print("FP bigeval")
+    print("\t-1\t--single  \tSingle mode, given a filename show an answer")
+    print("\t-c\t--count   \tHow many files to process (required if not --single)")
+    print("\t-s\t--start   \tIn seconds, when to start decoding (0)")
+    print("\t-d\t--duration\tIn seconds, how long to decode, -1 is unchanged (30)")
+    print("\t-D\t--decoder \tWhat decoder to use to make pcm ([mpg123|ffmpeg|sox|mad])")
+    print("\t-b\t--bitrate \tIn kbps, encoded bitrate. only for mp3, m4a, ogg. (128)")
+    print("\t-v\t--volume  \tIn %, volume of original. -1 for no adjustment. (-1)")
+    print("\t-l\t--lowpass \tIn Hz, lowpass filter. -1 for no adjustment. (-1)")
+    print("\t-e\t--encoder \tEncoder to use. wav, m4a, ogg, mp3. (wav)")
+    print("\t-L\t--local   \tUse local data, not solr, with given JSON block (None)")
+    print("\t-p\t--print   \tDuring bulk mode, show diagnostic on matches for types fp, fn, fp-a, fp-b (off)")
+    print("\t\t--no-shuffle\tdon't randomise the list of input files before running (for testing the exact same files each run) (off)")
+    print("\t-m\t--mono    \tMono decoder. (off)")
+    print("\t-2\t--22kHz   \tDownsample to 22kHz (off)")
+    print("\t-B\t--binary  \tPath to the binary to use for this test (codegen on path)")
+    print("\t-t\t--test    \tlist of files to check. pickle of {trid:path, trid2:path2}, or 'none'")
+    print("\t-n\t--new     \tnewline separated file of files not in the database, or 'none'")
+    print("\t-h\t--help    \tThis help message.")
     
 def main(argv):
     global _local_bigeval, _new_music_files
@@ -430,7 +430,7 @@ def main(argv):
             downsample = True
         if opt in ("-B","--binary"):
             if not os.path.exists(arg):
-                print "Binary %s not found. Exiting." % arg
+                print("Binary %s not found. Exiting." % arg)
                 sys.exit(2)
             config.CODEGEN_BINARY_OVERRIDE = arg
         if opt in ("-n","--new"):
@@ -444,19 +444,19 @@ def main(argv):
             sys.exit(2)
     
     if (single is None) and (how_many is None):
-        print >>sys.stderr, "Run in single mode (-1) or say how many files to test (-c)"
+        print("Run in single mode (-1) or say how many files to test (-c)", file=sys.stderr)
         usage()
         sys.exit(2)
     
     if testfile.lower() == "none" and newfile.lower() == "none" and single is None:
         # If both are none, we can't run
-        print >>sys.stderr, "Can't run with no datafiles. Skip --test, --new or add -1"
+        print("Can't run with no datafiles. Skip --test, --new or add -1", file=sys.stderr)
         sys.exit(2)
     if testfile.lower() == "none":
         _local_bigeval = {}
     else:
         if not os.path.exists(testfile):
-            print >>sys.stderr, "Cannot find bigeval.json. did you run fastingest with the -b flag?"
+            print("Cannot find bigeval.json. did you run fastingest with the -b flag?", file=sys.stderr)
             sys.exit(1)
         _local_bigeval = json.load(open(testfile,'r'))
     if newfile.lower() == "none" or not os.path.exists(newfile):
@@ -465,7 +465,7 @@ def main(argv):
         _new_music_files = open(newfile,'r').read().split('\n')
 
     _new_queries = float(len(_new_music_files))
-    _old_queries = float(len(_local_bigeval.keys()))
+    _old_queries = float(len(list(_local_bigeval.keys())))
     _total_queries = _new_queries + _old_queries
     
     if local is None:
@@ -481,14 +481,14 @@ def main(argv):
             tid = _reversed_bigeval.get(fn, None)
             tids[tid] = True
             if tid is not None:
-                if c.has_key("code"):
+                if "code" in c:
                     if len(c["code"]) > 4:
                         code_dict[tid] = fp.decode_code_string(c["code"])
                         
         fp.ingest(code_dict, local=True)
         lp = {}
-        for r in _local_bigeval.keys():
-            if tids.has_key(r):
+        for r in list(_local_bigeval.keys()):
+            if r in tids:
                 lp[r] = _local_bigeval[r]
         _local_bigeval = lp
         local = True

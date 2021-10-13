@@ -41,16 +41,16 @@ def ingest(file):
             fp.ingest(ingest_list, do_commit=False, split=False)
             ingest_list = []
     fp.ingest(ingest_list, do_commit=True, split=False)
-    print ""
+    print("")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print >>sys.stderr, "usage: %s replication [files ...]"
-        print >>sys.stderr, "       use - for stdin"
+        print("usage: %s replication [files ...]", file=sys.stderr)
+        print("       use - for stdin", file=sys.stderr)
         sys.exit(1)
     numfiles = len(sys.argv)-1
     count = 1
     for f in sys.argv[1:]:
-        print "importing file %d of %d: %s" % (count, numfiles, f)
+        print("importing file %d of %d: %s" % (count, numfiles, f))
         count += 1
         ingest(f)

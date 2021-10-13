@@ -35,10 +35,10 @@ def dump(start=0):
     writer = csv.writer(open(filename, "w"))
     with solr.pooled_connection(fp._fp_solr) as host:
         items_to_dump = host.query("import_date:[%s TO %s]" % (lastdump, now), rows=10000, start=start)
-        print "going to dump %s entries" % items_to_dump.results.numFound
+        print("going to dump %s entries" % items_to_dump.results.numFound)
         resultlen = len(items_to_dump)
         while resultlen > 0:
-            print "writing %d results from start=%s" % (resultlen, items_to_dump.results.start)
+            print("writing %d results from start=%s" % (resultlen, items_to_dump.results.start))
             for r in items_to_dump.results:
                 row = [r["track_id"],
                        r["codever"],
@@ -53,7 +53,7 @@ def dump(start=0):
             if itemcount > ITEMS_PER_FILE:
                 filecount += 1
                 filename = FILENAME_TEMPLATE % (now, filecount)
-                print "Making new file, %s" % filename
+                print("Making new file, %s" % filename)
                 writer = csv.writer(open(filename, "w"))
                 itemcount = resultlen
             items_to_dump = items_to_dump.next_batch()

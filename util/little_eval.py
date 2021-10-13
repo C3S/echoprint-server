@@ -65,21 +65,21 @@ def get_winners(query_code_string, response, elbow=8):
         actual[x["track_id"]] = fp.actual_matches(query_code_string, x["fp"], elbow=elbow)
         original[x["track_id"]] = int(x["score"])
 
-    sorted_actual_scores = sorted(actual.iteritems(), key=lambda (k,v): (v,k), reverse=True)
+    sorted_actual_scores = sorted(iter(actual.items()), key=lambda k_v: (k_v[1],k_v[0]), reverse=True)
     (actual_score_top_track_id, actual_score_top_score) = sorted_actual_scores[0]
-    sorted_original_scores = sorted(original.iteritems(), key=lambda (k,v): (v,k), reverse=True)
+    sorted_original_scores = sorted(iter(original.items()), key=lambda k_v1: (k_v1[1],k_v1[0]), reverse=True)
     (original_score_top_track_id, original_score_top_score) = sorted_original_scores[0]
     for x in sorted_actual_scores:
-        print "actual: %s %d" % (x[0], x[1])
+        print("actual: %s %d" % (x[0], x[1]))
     for x in sorted_original_scores:
-        print "original: %s %d" % (x[0], x[1])
+        print("original: %s %d" % (x[0], x[1]))
         
     return (actual_score_top_track_id, original_score_top_track_id)
     
 
 def main():
     if not len(sys.argv)==4:
-        print "usage: python little_eval.py [database_list | disk] query_list [limit]"
+        print("usage: python little_eval.py [database_list | disk] query_list [limit]")
         sys.exit()
         
     fp_codes = []
@@ -90,7 +90,7 @@ def main():
         database_list = open(sys.argv[1]).read().split("\n")[0:limit]
         for line in database_list:
             (track_id, file) = line.split(" ### ")
-            print track_id
+            print(track_id)
             # TODO - use threaded codegen
             j = codegen(file, start=-1, duration=-1)
             if len(j):
@@ -112,7 +112,7 @@ def main():
     query_list = open(sys.argv[2]).read().split("\n")[0:limit]
     for line in query_list:
         (track_id, file) = line.split(" ### ")
-        print track_id
+        print(track_id)
         j = codegen(munge(file))
         if len(j):
             counter+=1
@@ -127,9 +127,9 @@ def main():
                 actual_win+=1
             if(winner_original == track_id):
                 original_win+=1
-    print "%d / %d actual (%2.2f%%) %d / %d original (%2.2f%%) %d / %d bm (%2.2f%%)" % (actual_win, counter, (float(actual_win)/float(counter))*100.0, \
+    print("%d / %d actual (%2.2f%%) %d / %d original (%2.2f%%) %d / %d bm (%2.2f%%)" % (actual_win, counter, (float(actual_win)/float(counter))*100.0, \
         original_win, counter, (float(original_win)/float(counter))*100.0, \
-        bm_win, counter, (float(bm_win)/float(counter))*100.0)
+        bm_win, counter, (float(bm_win)/float(counter))*100.0))
     
 if __name__ == '__main__':
     main()

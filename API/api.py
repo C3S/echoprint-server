@@ -6,7 +6,7 @@ api.py
 Created by Brian Whitman on 2010-06-16.
 Copyright (c) 2010 The Echo Nest Corporation. All rights reserved.
 """
-from __future__ import with_statement
+
 
 import web
 import fp

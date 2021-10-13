@@ -6,7 +6,7 @@ fp.py
 Created by Brian Whitman on 2010-06-16.
 Copyright (c) 2010 The Echo Nest Corporation. All rights reserved.
 """
-from __future__ import with_statement
+
 import logging
 import solr
 import pickle
@@ -32,7 +32,7 @@ _tyrant = None
 class Response(object):
     # Response codes
     NOT_ENOUGH_CODE, CANNOT_DECODE, SINGLE_BAD_MATCH, SINGLE_GOOD_MATCH, NO_RESULTS, MULTIPLE_GOOD_MATCH_HISTOGRAM_INCREASED, \
-        MULTIPLE_GOOD_MATCH_HISTOGRAM_DECREASED, MULTIPLE_BAD_HISTOGRAM_MATCH, MULTIPLE_GOOD_MATCH = range(9)
+        MULTIPLE_GOOD_MATCH_HISTOGRAM_DECREASED, MULTIPLE_BAD_HISTOGRAM_MATCH, MULTIPLE_GOOD_MATCH = list(range(9))
 
     def __init__(self, code, TRID=None, score=0, qtime=0, tic=0, metadata={}):
         self.code = code
@@ -209,7 +209,7 @@ def best_match_for_query(code_string, elbow=10, local=False):
     
     #logger.debug("Actual score for %s is %d (code_len %d), original was %d" % (r["track_id"], actual_scores[r["track_id"]], code_len, top_match_score))
     # Sort the actual scores
-    sorted_actual_scores = sorted(actual_scores.iteritems(), key=key, reverse=True)
+    sorted_actual_scores = sorted(iter(actual_scores.items()), key=key, reverse=True)
     
     # Because we split songs up into multiple parts, sometimes the results will have the same track in the
     # first few results. Remove these duplicates so that the falloff is (potentially) higher.
@@ -300,14 +300,14 @@ def actual_matches(code_string_query, code_string_match, slop = 2, elbow = 10):
                 if dist < min_dist:
                     min_dist = dist
             if min_dist < 32767:
-                if time_diffs.has_key(min_dist):
+                if min_dist in time_diffs:
                     time_diffs[min_dist] += 1
                 else:
                     time_diffs[min_dist] = 1
         match_counter += 2
 
     # sort the histogram, pick the top 2 and return that as your actual score
-    actual_match_list = sorted(time_diffs.iteritems(), key=key, reverse=True)
+    actual_match_list = sorted(iter(time_diffs.items()), key=key, reverse=True)
 
     if(len(actual_match_list)>1):
         return actual_match_list[0][1] + actual_match_list[1][1]
@@ -402,12 +402,12 @@ def local_delete(tracks):
 
 def local_dump():
     print("Stored tracks:")
-    print(_fake_solr["store"].keys())
+    print(list(_fake_solr["store"].keys()))
     print("Metadata:")
-    for t in _fake_solr["metadata"].keys():
+    for t in list(_fake_solr["metadata"].keys()):
         print(t, _fake_solr["metadata"][t])
     print("Keys:")
-    for k in _fake_solr["index"].keys():
+    for k in list(_fake_solr["index"].keys()):
         print("%s -> %s" % (k, ", ".join(_fake_solr["index"][k])))
 
 def local_query_fp(code_string,rows=10,get_data=False):
@@ -423,11 +423,11 @@ def local_query_fp(code_string,rows=10,get_data=False):
         top_matches[track] += 1
     if not get_data:
         # Make a list of lists that have track_id, score
-        return FakeSolrResponse(sorted(top_matches.iteritems(), key=key, reverse=True)[0:rows])
+        return FakeSolrResponse(sorted(iter(top_matches.items()), key=key, reverse=True)[0:rows])
     else:
         # Make a list of lists that have track_id, score, then fp
-        lol = sorted(top_matches.iteritems(), key=key, reverse=True)[0:rows]
-        lol = map(list, lol)
+        lol = sorted(iter(top_matches.items()), key=key, reverse=True)[0:rows]
+        lol = list(map(list, lol))
         
         for x in lol:
             trackid = x[0].split("-")[0]
@@ -482,10 +482,10 @@ def erase_database(really_delete=False, local=False):
         host.commit()
 
     tyrant = get_tyrant()
-    tyrant.multi_del(tyrant.keys())
+    tyrant.multi_del(list(tyrant.keys()))
 
 def chunker(seq, size):
-    return [tuple(seq[pos:pos + size]) for pos in xrange(0, len(seq), size)]
+    return [tuple(seq[pos:pos + size]) for pos in range(0, len(seq), size)]
 
 def split_codes(fp):
     """ Split a codestring into a list of codestrings. Each string contains
@@ -618,7 +618,7 @@ def fp_code_for_track_id(track_id, local=False):
     return get_tyrant().get(track_id.encode("utf-8"))
 
 def new_track_id():
-    rand5 = ''.join(random.choice(string.letters) for x in xrange(5)).upper()
+    rand5 = ''.join(random.choice(string.letters) for x in range(5)).upper()
     global _hexpoch
     _hexpoch += 1
     hexpoch = str(hex(_hexpoch))[2:].upper()

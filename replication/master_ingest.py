@@ -44,17 +44,17 @@ def ingest(source, file):
             fp.ingest(ingest_list, do_commit=False, split=False)
             ingest_list = []
     fp.ingest(ingest_list, do_commit=True, split=False)
-    print ""
+    print("")
 
 if __name__ == "__main__":
     if len(sys.argv) < 4:
-        print >>sys.stderr, "usage: %s -s <source> [file|-]" % sys.argv[0]
+        print("usage: %s -s <source> [file|-]" % sys.argv[0], file=sys.stderr)
         sys.exit(1)
     numfiles = len(sys.argv)-3
     count = 1
     source = sys.argv[2]
-    print "setting import source to '%s'" % source
+    print("setting import source to '%s'" % source)
     for f in sys.argv[3:]:
-        print "importing file %d of %d: %s" % (count, numfiles, f)
+        print("importing file %d of %d: %s" % (count, numfiles, f))
         count += 1
         ingest(source, f)

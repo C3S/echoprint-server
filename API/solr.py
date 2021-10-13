@@ -287,7 +287,7 @@ import sys
 import socket
 import http
 import codecs
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import datetime
 import time
 from io import StringIO
@@ -613,22 +613,22 @@ class SolrConnection:
         """
 
        # Clean up optional parameters to match SOLR spec.
-        params = dict([(key.replace('_','.'), unicode(value)) 
-                      for key, value in params.items()])
+        params = dict([(key.replace('_','.'), str(value)) 
+                      for key, value in list(params.items())])
 
-        if type(q) == type(u''):
+        if type(q) == type(''):
             q = q.encode('utf-8')
         if q is not None: 
             params['q'] = q
         
         if fields: 
-            if not isinstance(fields, basestring): 
+            if not isinstance(fields, str): 
                 fields = ",".join(fields)
         if not fields: 
             fields = '*'
 
         if sort: 
-            if not isinstance(sort, basestring): 
+            if not isinstance(sort, str): 
                 sort = ",".join(sort)
             params['sort'] = sort
 
@@ -640,10 +640,10 @@ class SolrConnection:
         params['echoParams'] = "none"
 
         params['fl'] = fields
-        if(params.has_key('qt')):
+        if('qt' in params):
             if(params['qt'] == "None"):
                 del params['qt']
-        if(params.has_key('fq')):
+        if('fq' in params):
             if(params['fq'] == "None"):
                 del params['fq']
                 
@@ -651,7 +651,7 @@ class SolrConnection:
         if highlight: 
             params['hl'] = 'on'
             if not isinstance(highlight, (bool, int, float)): 
-                if not isinstance(highlight, basestring): 
+                if not isinstance(highlight, str): 
                     highlight = ",".join(highlight)
                 params['hl.fl'] = highlight
 
@@ -661,7 +661,7 @@ class SolrConnection:
         else:
             params['wt'] = 'standard'
 
-        request = urllib.urlencode(params, doseq=True)
+        request = urllib.parse.urlencode(params, doseq=True)
         try:
             tic = time.time()
             rsp = self._post(self.path + '/select'+self.invariant, 
@@ -741,7 +741,7 @@ class SolrConnection:
         """
         Delete a specific document by id. 
         """
-        xstr = u'<delete><id>%s</id></delete>' % escape(unicode(id))
+        xstr = '<delete><id>%s</id></delete>' % escape(str(id))
         return self._update(xstr)
 
 
@@ -758,7 +758,7 @@ class SolrConnection:
         """
         Delete all documents returned by a query.
         """
-        xstr = u'<delete><query>%s</query></delete>' % escape(query)
+        xstr = '<delete><query>%s</query></delete>' % escape(query)
         return self._update(xstr)
 
     def add(self, _commit=False, **fields):
@@ -770,11 +770,11 @@ class SolrConnection:
             connection.add(id="mydoc", author="Me")
         """
 
-        lst = [u'<add>']
+        lst = ['<add>']
         self.__add(lst, fields)
-        lst.append(u'</add>')
+        lst.append('</add>')
         if _commit: 
-            lst.append(u'<commit/>')
+            lst.append('<commit/>')
         xstr = ''.join(lst)
         return self._update(xstr)
 
@@ -786,12 +786,12 @@ class SolrConnection:
         docs -- a list of dicts, where each dict is a document to add 
             to SOLR.
         """
-        lst = [u'<add>']
+        lst = ['<add>']
         for doc in docs:
             self.__add(lst, doc)
-        lst.append(u'</add>')
+        lst.append('</add>')
         if _commit: 
-            lst.append(u'<commit/>')
+            lst.append('<commit/>')
         xstr = ''.join(lst)
         return self._update(xstr, addHandler=addHandler)
         
@@ -811,9 +811,9 @@ class SolrConnection:
             options = ''
             
         if _optimize: 
-            xstr = u'<optimize %s/>' % options
+            xstr = '<optimize %s/>' % options
         else:
-            xstr = u'<commit %s/>' % options
+            xstr = '<commit %s/>' % options
             
         return self._update(xstr)
 
@@ -855,9 +855,9 @@ class SolrConnection:
         input parameters or responses
         """
         # Clean up optional parameters to match SOLR spec.
-        params = dict([(key.replace('_','.'), unicode(value)) 
-                       for key, value in params.items()])
-        request = urllib.urlencode(params, doseq=True)
+        params = dict([(key.replace('_','.'), str(value)) 
+                       for key, value in list(params.items())])
+        request = urllib.parse.urlencode(params, doseq=True)
         try:
             rsp = self._post(self.path+'/'+handler+self.invariant, 
                               request, self.form_headers)
@@ -870,10 +870,10 @@ class SolrConnection:
 
     def handler_update_params(self, handler, **params):
         # Clean up optional parameters to match SOLR spec.
-        params = dict([(key.replace('_','.'), unicode(value)) 
-                       for key, value in params.items()])
+        params = dict([(key.replace('_','.'), str(value)) 
+                       for key, value in list(params.items())])
 
-        request = urllib.urlencode(params, doseq=True)
+        request = urllib.parse.urlencode(params, doseq=True)
         try:
             rsp = self._post(self.path+'/'+handler+self.invariant, 
                               request, self.form_headers)
@@ -894,11 +894,11 @@ class SolrConnection:
         """
 
         # Clean up optional parameters to match SOLR spec.
-        params = dict([(key.replace('_','.'), unicode(value)) 
-                       for key, value in params.items()])
+        params = dict([(key.replace('_','.'), str(value)) 
+                       for key, value in list(params.items())])
 
 
-        request = urllib.urlencode(params, doseq=True)
+        request = urllib.parse.urlencode(params, doseq=True)
 
         try:
             rsp = self._post(self.path+'/select'+self.invariant, 
@@ -936,8 +936,8 @@ class SolrConnection:
         return data
 
     def __add(self, lst, fields):
-        lst.append(u'<doc>')
-        for field, value in fields.items():
+        lst.append('<doc>')
+        for field, value in list(fields.items()):
             # Handle multi-valued fields if values
             # is passed in as a list/tuple
             if not isinstance(value, (list, tuple)): 
@@ -955,7 +955,7 @@ class SolrConnection:
                 try:
                     lst.append('<field name=%s>%s</field>' % (
                         (quoteattr(field), 
-                        escape(unicode(val)))))
+                        escape(str(val)))))
                 except UnicodeDecodeError:
                     lst.append('<field name=%s> </field>' % (
                         (quoteattr(field))))
@@ -1187,7 +1187,7 @@ class ResponseContentHandler(ContentHandler):
             node.final = None
             
         elif name == 'long': 
-            node.final = long(value.strip())
+            node.final = int(value.strip())
 
         elif name == 'bool': 
             node.final = value.strip().lower().startswith('t')
@@ -1228,7 +1228,7 @@ class ResponseContentHandler(ContentHandler):
         else:
             raise SolrContentException("Unknown tag: %s" % name)
 
-        for attr, val in node.attrs.items(): 
+        for attr, val in list(node.attrs.items()): 
             if attr != 'name': 
                 setattr(node.final, attr, val)
 
@@ -1261,7 +1261,7 @@ class Node(object):
             self.name, 
             "".join(self.chars).strip(),
             ' '.join(['%s="%s"' % (attr, val) 
-                            for attr, val in self.attrs.items()]))
+                            for attr, val in list(self.attrs.items())]))
 
 
 # ===================================================================
@@ -1280,22 +1280,22 @@ def check_response_status(response):
 
 def stringToPython(f):
     """Convert a doc encoded as strings to native python types using EN's schema."""
-    for key in f.keys():
+    for key in list(f.keys()):
         # Only convert f_ i_ etc type fields
         if(key[1]=='_'):
             # Make sure it's a list type (canonical docs get lists stripped)
             if(type(f[key]) != type([])):
                 f[key] = [f[key]]
             if(key.startswith('f_')):
-                f[key] = map(float,f[key])
+                f[key] = list(map(float,f[key]))
             if(key.startswith('i_')):
-                f[key] = map(int,f[key])
+                f[key] = list(map(int,f[key]))
             if(key.startswith('l_')):
-                f[key] = map(long,f[key])
+                f[key] = list(map(int,f[key]))
             if(key.startswith('b_')):
-                f[key] = map(str2bool,f[key])
+                f[key] = list(map(str2bool,f[key]))
             if(key.startswith('d_')):
-                f[key] = map(utc_from_string,f[key])
+                f[key] = list(map(utc_from_string,f[key]))
             if(key.startswith('s_')):
                 f[key] = f[key]
             if(key.startswith('v_')):

@@ -30,11 +30,11 @@ def check_for_fields():
     with solr.pooled_connection(fp._fp_solr) as host:
         results = host.query("-source:[* TO *]", rows=1, score=False)
         if len(results) > 0:
-            print >>sys.stderr, "Missing 'source' field on at least one doc. Run util/upgrade_server.py"
+            print("Missing 'source' field on at least one doc. Run util/upgrade_server.py", file=sys.stderr)
             sys.exit(1)
         results = host.query("-import_date:[* TO *]", rows=1, score=False)
         if len(results) > 0:
-            print >>sys.stderr, "Missing 'import_date' field on at least one doc. Run util/upgrade_server.py"
+            print("Missing 'import_date' field on at least one doc. Run util/upgrade_server.py", file=sys.stderr)
             sys.exit(1)        
 
 def dump(start=0):
@@ -51,7 +51,7 @@ def dump(start=0):
         items_to_dump = host.query("source:local AND import_date:[%s TO %s]" % (lastdump, now), rows=10000, start=start)
         resultlen = len(items_to_dump)
         while resultlen > 0:
-            print "writing %d results from start=%s" % (resultlen, items_to_dump.results.start)
+            print("writing %d results from start=%s" % (resultlen, items_to_dump.results.start))
             for r in items_to_dump.results:
                 row = [r["track_id"],
                        r["codever"],
@@ -66,7 +66,7 @@ def dump(start=0):
             if itemcount > ITEMS_PER_FILE:
                 filecount += 1
                 filename = FILENAME_TEMPLATE % (SLAVE_NAME, now, filecount)
-                print "Making new file, %s" % filename
+                print("Making new file, %s" % filename)
                 writer = csv.writer(open(filename, "w"))
                 itemcount = resultlen
             items_to_dump = items_to_dump.next_batch()
