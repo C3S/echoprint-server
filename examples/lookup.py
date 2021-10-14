@@ -33,19 +33,19 @@ def lookup(file):
     if len(codes) and "code" in codes[0]:
         decoded = fp.decode_code_string(codes[0]["code"])
         result = fp.best_match_for_query(decoded)
-        print "Got result:", result
+        print("Got result:", result)
         if result.TRID:
-            print "ID: %s" % (result.TRID)
-            print "Artist: %s" % (result.metadata.get("artist"))
-            print "Song: %s" % (result.metadata.get("track"))
+            print("ID: %s" % (result.TRID))
+            print("Artist: %s" % (result.metadata.get("artist")))
+            print("Song: %s" % (result.metadata.get("track")))
         else:
-            print "No match. This track may not be in the database yet."
+            print("No match. This track may not be in the database yet.")
     else:
-        print "Couldn't decode", file
+        print("Couldn't decode", file)
             
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print >>sys.stderr, "Usage: %s <audio file>" % sys.argv[0]
+        print("Usage: %s <audio file>" % sys.argv[0], file=sys.stderr)
         sys.exit(1)
     lookup(sys.argv[1])

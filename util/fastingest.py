@@ -47,8 +47,8 @@ def parse_json_dump(jfile):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print >>sys.stderr, "Usage: %s [-b] [json dump] ..." % sys.argv[0]
-        print >>sys.stderr, "       -b: write a file to disk for bigeval"
+        print("Usage: %s [-b] [json dump] ..." % sys.argv[0], file=sys.stderr)
+        print("       -b: write a file to disk for bigeval", file=sys.stderr)
         sys.exit(1)
     
     write_bigeval = False
@@ -58,7 +58,7 @@ if __name__ == "__main__":
         pos = 2
     
     for (i, f) in enumerate(sys.argv[pos:]):
-        print "%d/%d %s" % (i+1, len(sys.argv)-pos, f)
+        print("%d/%d %s" % (i+1, len(sys.argv)-pos, f))
         codes, bigeval = parse_json_dump(f)
         fp.ingest(codes, do_commit=False)
         if write_bigeval:

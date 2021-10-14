@@ -38,19 +38,19 @@ def process_results(results):
     return response
 
 def main():
-    print "setting source to '%s', import date to %s" % (SOURCE, IMPORTDATE)
+    print("setting source to '%s', import date to %s" % (SOURCE, IMPORTDATE))
     with solr.pooled_connection(fp._fp_solr) as host:
         # Find rows where source field doesn't exist
         results = host.query("-source:[* TO *]", rows=ROWS_PER_QUERY, score=False)
         resultlen = len(results)
         while resultlen > 0:
-            print "got",resultlen,"results"
+            print("got",resultlen,"results")
             processed = process_results(results.results)
             host.add_many(processed)
             host.commit()
             results = host.query("-source:[* TO *]", rows=ROWS_PER_QUERY, score=False)
             resultlen = len(results)
-        print "done"
+        print("done")
             
             
 if __name__ == "__main__":
