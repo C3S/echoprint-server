@@ -26,7 +26,7 @@ for the raw Tyrant protocol::
 import math
 import socket
 import struct
-from collections import MutableMapping as DictMixin
+from collections.abc import MutableMapping as DictMixin
 
 __version__ = '1.1.17'
 
