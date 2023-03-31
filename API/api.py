@@ -71,11 +71,6 @@ class query:
 
 class delete:
     def POST(self):
-        import ptvsd  # unconditional import breaks test coverage
-        ptvsd.enable_attach(address=("0.0.0.0", 52004),
-                            redirect_output=True)
-        ptvsd.wait_for_attach()
-        ptvsd.break_into_debugger()
         return self.GET()
 
     def GET(self):
