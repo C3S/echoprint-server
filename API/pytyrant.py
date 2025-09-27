@@ -35,6 +35,7 @@ __all__ = [
     'RDBMONOULOG', 'RDBXOLCKREC', 'RDBXOLCKGLB',
 ]
 
+
 class TyrantError(Exception):
     pass
 
@@ -138,7 +139,8 @@ def _t2W(code, key, value, width):
 
 def _t3F(code, func, opts, key, value):
     return [
-        struct.pack('>BBIIII', MAGIC, code, len(func), opts, len(key), len(value)),
+        struct.pack('>BBIIII', MAGIC, code, len(func), opts, len(key),
+                    len(value)),
         func,
         key,
         value,
@@ -160,11 +162,12 @@ def socksend(sock, lst):
     #     except:
     #         pass
     # sock.sendall(lst_new)
-    sock.sendall(''.join(lst))
+    lst = [type(item) is str and item.encode() or item for item in lst]
+    sock.sendall(b''.join(lst))
 
 
 def sockrecv(sock, bytes):
-    d = ''
+    d = b''
     while len(d) < bytes:
         c = sock.recv(min(8192, bytes - len(d)))
         if not c:
@@ -313,7 +316,8 @@ class PyTyrant(DictMixin):
             lst.extend((k, v))
         self.t.misc("putlist", opts, lst)
 
-    def call_func(self, func, key, value, record_locking=False, global_locking=False):
+    def call_func(self, func, key, value, record_locking=False,
+                  global_locking=False):
         opts = (
             (record_locking and RDBXOLCKREC or 0) |
             (global_locking and RDBXOLCKGLB or 0))
@@ -326,7 +330,7 @@ class PyTyrant(DictMixin):
             raise KeyError(key)
 
     def get_stats(self):
-        return dict(l.split('\t', 1) for l in self.t.stat().splitlines() if l)
+        return dict(k.split('\t', 1) for k in self.t.stat().splitlines() if k)
 
     def prefix_keys(self, prefix, maxkeys=None):
         if maxkeys is None:
@@ -536,13 +540,16 @@ class Tyrant(object):
 
     def misc(self, func, opts, args):
         """All databases support "putlist", "outlist", and "getlist".
-        "putlist" is to store records. It receives keys and values one after the other, and returns an empty list.
-        "outlist" is to remove records. It receives keys, and returns an empty list.
+        "putlist" is to store records. It receives keys and values one after
+        the other, and returns an empty list.
+        "outlist" is to remove records. It receives keys, and returns an empty
+        list.
         "getlist" is to retrieve records. It receives keys, and returns values.
 
         Table database supports "setindex", "search", "genuid".
 
-        opts is a bitflag that can be RDBMONOULOG to prevent writing to the update log
+        opts is a bitflag that can be RDBMONOULOG to prevent writing to the
+        update log
         """
         return list(self._misc(func, opts, args))
 
